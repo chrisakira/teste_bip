@@ -1,0 +1,65 @@
+# --- Java / Maven ---
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Maven local repo (if accidentally created inside project)
+.m2/
+
+# IDEs
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+/.metadata/
+bin/
+
+# VS Code
+.vscode/
+
+# --- Node / AngularJS ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.tmp/
+.angular/
+.angular/cache/
+bower_components/
+www/
+
+# Coverage
+coverage/
+nyc_output/
+
+# Generated archives
+*.tgz
+
+# Environment
+.env
+.env.*
+
+# System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Misc editors
+*~
+*.swp
+*.bak
+
+# Logs and temp folders
+logs/
+tmp/
+temp/
