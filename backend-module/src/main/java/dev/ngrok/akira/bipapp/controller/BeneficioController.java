@@ -1,4 +1,4 @@
-package com.example.backend;
+package dev.ngrok.akira.bipapp.controller;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
