@@ -18,17 +18,17 @@ public class BeneficioService {
     }
 
     /**
-     * Retorna todos os benefícios cadastrados.
-     * Usado pelo controller para listar recursos.
+     * Returns all registered benefits.
+     * Used by the controller to list resources.
      */
     public List<Beneficio> listarTodos() {
         return repository.findAll();
     }
 
     /**
-     * Busca um benefício pelo identificador.
-     * @param id Identificador do benefício
-     * @return Benefício encontrado ou lança RuntimeException se não existir
+     * Searches for a benefit by identifier.
+     * @param id Benefit identifier
+     * @return Found benefit or throws RuntimeException if it does not exist
      */
     public Beneficio buscarPorId(Long id) {
         return repository.findById(id)
@@ -36,19 +36,19 @@ public class BeneficioService {
     }
 
     /**
-     * Persiste um novo benefício.
-     * @param beneficio Entidade a ser criada
-     * @return Entidade criada com `id`
+     * Persists a new benefit.
+     * @param beneficio Entity to be created
+     * @return Created entity with `id`
      */
     public Beneficio criar(Beneficio beneficio) {
         return repository.save(beneficio);
     }
 
     /**
-     * Atualiza um benefício existente.
-     * @param id Identificador do benefício
-     * @param dados Dados para atualização
-     * @return Benefício atualizado
+     * Updates an existing benefit.
+     * @param id Benefit identifier
+     * @param dados Data for update
+     * @return Updated benefit
      */
     public Beneficio atualizar(Long id, Beneficio dados) {
         Beneficio existente = buscarPorId(id);
@@ -60,8 +60,8 @@ public class BeneficioService {
     }
 
     /**
-     * Remove um benefício pelo id.
-     * @param id Identificador do benefício a ser removido
+     * Removes a benefit by id.
+     * @param id Identifier of the benefit to be removed
      */
     public void deletar(Long id) {
         Beneficio existente = buscarPorId(id);
@@ -69,20 +69,20 @@ public class BeneficioService {
     }
 
     /**
-     * Transferência de valor entre benefícios.
-     * Correção do bug do EJB:
-     * - Valida saldo suficiente
-     * - Usa locking pessimista para evitar lost update
-     * - Transação garante rollback em caso de erro
+     * Value transfer between benefits.
+     * EJB bug fix:
+     * - Validates sufficient balance
+     * - Uses pessimistic locking to avoid lost update
+     * - Transaction ensures rollback on error
      */
     /**
-     * Realiza transferência de valor entre dois benefícios.
-     * - Valida valor e ids
-     * - Usa lock pessimista via repository
-     * - Lança IllegalArgumentException para entradas inválidas
-     * @param origemId id do benefício origem
-     * @param destinoId id do benefício destino
-     * @param valor valor a ser transferido
+     * Performs value transfer between two benefits.
+     * - Validates value and ids
+     * - Uses pessimistic lock via repository
+     * - Throws IllegalArgumentException for invalid inputs
+     * @param origemId origin benefit id
+     * @param destinoId destination benefit id
+     * @param valor value to be transferred
      */
     @Transactional
     public void transferir(Long origemId, Long destinoId, BigDecimal valor) {

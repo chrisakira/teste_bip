@@ -35,7 +35,7 @@ public class Beneficio {
         this.ativo = true;
     }
 
-    // Getters e Setters
+    // Getters and Setters
 
     public Long getId() {
         return id;

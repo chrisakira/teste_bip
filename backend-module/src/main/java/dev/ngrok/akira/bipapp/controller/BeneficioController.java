@@ -19,8 +19,8 @@ public class BeneficioController {
     }
 
     /**
-     * Lista todos os benefícios.
-     * Retorna uma lista de objetos `Beneficio`.
+     * Lists all benefits.
+     * Returns a list of `Beneficio` objects.
      */
     @GetMapping
     public List<Beneficio> listar() {
@@ -28,9 +28,9 @@ public class BeneficioController {
     }
 
     /**
-     * Busca um benefício por `id`.
-     * @param id Identificador do benefício
-     * @return Objeto `Beneficio` correspondente
+     * Retrieves a benefit by `id`.
+     * @param id Benefit identifier
+     * @return Corresponding `Beneficio` object
      */
     @GetMapping("/{id}")
     public Beneficio buscar(@PathVariable Long id) {
@@ -38,9 +38,9 @@ public class BeneficioController {
     }
 
     /**
-     * Cria um novo benefício.
-     * @param beneficio Objeto `Beneficio` no corpo da requisição
-     * @return Benefício criado com `id`
+     * Creates a new benefit.
+     * @param beneficio `Beneficio` object in the request body
+     * @return Created benefit with `id`
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -49,10 +49,10 @@ public class BeneficioController {
     }
 
     /**
-     * Atualiza um benefício existente.
-     * @param id Identificador do benefício a ser atualizado
-     * @param beneficio Dados atualizados
-     * @return Benefício atualizado
+     * Updates an existing benefit.
+     * @param id Identifier of the benefit to be updated
+     * @param beneficio Updated data
+     * @return Updated benefit
      */
     @PutMapping("/{id}")
     public Beneficio atualizar(@PathVariable Long id, @RequestBody Beneficio beneficio) {
@@ -60,8 +60,8 @@ public class BeneficioController {
     }
 
     /**
-     * Remove um benefício por `id`.
-     * Retorna HTTP 204 quando removido com sucesso.
+     * Deletes a benefit by `id`.
+     * Returns HTTP 204 when successfully removed.
      */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -70,9 +70,9 @@ public class BeneficioController {
     }
 
     /**
-     * Realiza transferência de valor entre dois benefícios.
-     * Corpo: `TransferenciaRequest { origemId, destinoId, valor }`.
-     * Retorna 200 com mensagem de sucesso ou 400/404 com erro.
+     * Performs value transfer between two benefits.
+     * Body: `TransferenciaRequest { origemId, destinoId, valor }`.
+     * Returns 200 with success message or 400/404 with error.
      */
     @PostMapping("/transferir")
     public ResponseEntity<String> transferir(@RequestBody TransferenciaRequest request) {
