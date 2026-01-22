@@ -48,6 +48,7 @@ nyc_output/
 # Environment
 .env
 .env.*
+.env.*
 
 # System
 .DS_Store
