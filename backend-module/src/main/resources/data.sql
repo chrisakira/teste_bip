@@ -1,3 +1,8 @@
-INSERT INTO BENEFICIO (NOME, DESCRICAO, VALOR, ATIVO) VALUES
-('Beneficio A', 'Descrição A', 1000.00, TRUE),
-('Beneficio B', 'Descrição B', 500.00, TRUE);
+-- Seed data for PostgreSQL (only inserts if table is empty)
+INSERT INTO BENEFICIO (NOME, DESCRICAO, VALOR, ATIVO) 
+SELECT 'Beneficio A', 'Descrição A', 1000.00, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM BENEFICIO WHERE NOME = 'Beneficio A');
+
+INSERT INTO BENEFICIO (NOME, DESCRICAO, VALOR, ATIVO) 
+SELECT 'Beneficio B', 'Descrição B', 500.00, TRUE
+WHERE NOT EXISTS (SELECT 1 FROM BENEFICIO WHERE NOME = 'Beneficio B');
