@@ -1,9 +1,18 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
 
 jobs:
-  build:
+  test_backend:
+    name: Backend Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -12,5 +21,13 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Build backend
-        run: mvn -B -f backend-module clean package
+      - name: Build and test backend
+        run: mvn -B -f backend-module clean verify
+      - name: Check code coverage (95% minimum)
+        run: mvn -B -f backend-module jacoco:check
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: jacoco-report
+          path: backend-module/target/site/jacoco/
