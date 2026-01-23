@@ -1,0 +1,169 @@
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
+<div class="page">
+  <div class="page__glow"></div>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Benefícios • Camada frontend</p>
+      <h1>Central bip</h1>
+      <p class="lead">
+        Visualize saldos, cadastre novos benefícios e execute transferências com validações em tempo real.
+      </p>
+      <div class="hero__chips">
+        <span class="chip">Saldo consolidado {{ saldoTotal }}</span>
+        <span class="chip">{{ totalAtivo }} benefícios ativos</span>
+      </div>
+    </div>
+    <div class="hero__cta">
+      <button type="button" class="ghost" (click)="carregarBeneficios()" [disabled]="loading">
+        Atualizar dados
+      </button>
+      <span class="hero__status" [class.is-loading]="loading">
+        {{ loading ? 'Sincronizando...' : 'Em tempo real' }}
+      </span>
+    </div>
+  </section>
+
+  <section class="grid">
+    <article class="panel list-panel">
+      <header>
+        <div>
+          <p class="eyebrow">Benefícios cadastrados</p>
+          <h2>Carteira</h2>
+        </div>
+        <button class="ghost" type="button" (click)="cancelarEdicao()" *ngIf="estaEditando">
+          Novo cadastro
+        </button>
+      </header>
+
+      <div class="feedback" *ngIf="feedback as state" [class.is-success]="state.type === 'success'" [class.is-error]="state.type === 'error'">
+        {{ state.message }}
+      </div>
+
+      <div class="table-wrapper">
+        @if (loading) {
+          <div class="skeleton" aria-label="Carregando benefícios">
+            <div class="skeleton__row" *ngFor="let _ of skeletonRows"></div>
+          </div>
+        } @else if (beneficios.length) {
+          <table>
+            <thead>
+              <tr>
+                <th>Benefício</th>
+                <th>Descrição</th>
+                <th>Saldo</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (beneficio of beneficios; track trackById) {
+                <tr [class.is-editing]="beneficio.id === editingId">
+                  <td data-label="Benefício">
+                    <strong>{{ beneficio.nome }}</strong>
+                    <small>ID {{ beneficio.id }}</small>
+                  </td>
+                  <td data-label="Descrição">{{ beneficio.descricao || '—' }}</td>
+                  <td data-label="Saldo">{{ formatCurrency(beneficio.valor) }}</td>
+                  <td data-label="Status">
+                    <span class="status" [class.is-inactive]="!beneficio.ativo">
+                      {{ beneficio.ativo ? 'Ativo' : 'Inativo' }}
+                    </span>
+                  </td>
+                  <td class="actions">
+                    <button type="button" (click)="iniciarEdicao(beneficio)">Editar</button>
+                    <button type="button" class="danger" (click)="removerBeneficio(beneficio)">
+                      Remover
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p class="empty-state">
+            Ainda não existem benefícios cadastrados. Utilize o formulário ao lado para começar.
+          </p>
+        }
+      </div>
+    </article>
+
+    <article class="panel form-panel">
+      <p class="eyebrow">{{ estaEditando ? 'Editando benefício' : 'Novo benefício' }}</p>
+      <h2>{{ estaEditando ? 'Atualizar dados' : 'Cadastrar benefício' }}</h2>
+
+      <form [formGroup]="beneficioForm" (ngSubmit)="salvarBeneficio()" novalidate>
+        <label>
+          <span>Nome</span>
+          <input formControlName="nome" type="text" placeholder="Ex.: Vale Alimentação" />
+          <small *ngIf="beneficioForm.controls.nome.touched && beneficioForm.controls.nome.invalid">
+            Informe um nome válido.
+          </small>
+        </label>
+
+        <label>
+          <span>Descrição</span>
+          <textarea formControlName="descricao" rows="3" placeholder="Detalhes visíveis para o colaborador"></textarea>
+        </label>
+
+        <label>
+          <span>Valor disponível (R$)</span>
+          <input formControlName="valor" type="number" step="0.01" min="0" />
+          <small *ngIf="beneficioForm.controls.valor.touched && beneficioForm.controls.valor.invalid">
+            Valor deve ser maior que zero.
+          </small>
+        </label>
+
+        <label class="switch">
+          <input type="checkbox" formControlName="ativo" />
+          <span>Benefício ativo</span>
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" [disabled]="saving">
+            {{ saving ? 'Salvando...' : estaEditando ? 'Atualizar' : 'Cadastrar' }}
+          </button>
+          <button type="button" class="ghost" (click)="cancelarEdicao()" [disabled]="saving">Limpar</button>
+        </div>
+      </form>
+    </article>
+
+    <article class="panel transfer-panel">
+      <p class="eyebrow">Transferência segura</p>
+      <h2>Movimentar saldo</h2>
+      <p class="lead">
+        O backend valida saldo e aplica locking; o frontend garante que somente contas distintas sejam usadas.
+      </p>
+
+      <form [formGroup]="transferForm" (ngSubmit)="transferir()" novalidate>
+        <label>
+          <span>Origem</span>
+          <select formControlName="origemId">
+            <option value="" disabled>Selecione</option>
+            @for (beneficio of beneficios; track trackById) {
+              <option [value]="beneficio.id ?? ''">{{ beneficio.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Destino</span>
+          <select formControlName="destinoId">
+            <option value="" disabled>Selecione</option>
+            @for (beneficio of beneficios; track trackById) {
+              <option [value]="beneficio.id ?? ''">{{ beneficio.nome }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          <span>Valor (R$)</span>
+          <input type="number" formControlName="valor" min="0" step="0.01" />
+        </label>
+
+        <button type="submit" [disabled]="transferProcessing">
+          {{ transferProcessing ? 'Transferindo...' : 'Transferir agora' }}
+        </button>
+      </form>
+    </article>
+  </section>
+</div>
