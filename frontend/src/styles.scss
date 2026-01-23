@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Public+Sans:wght@400;500;600&display=swap');
+
+:root {
+	--blue-900: #050c28;
+	--blue-800: #071038;
+	--blue-700: #0a1b4a;
+	--blue-500: #1e3a8a;
+	--blue-400: #2563eb;
+	--blue-300: #60a5fa;
+	--cyan-400: #22d3ee;
+	--teal-300: #5eead4;
+	--pink-500: #ec4899;
+	--text-primary: #f1f5f9;
+	--text-muted: #c7d2fe;
+	--surface: rgba(9, 13, 33, 0.85);
+	--border-color: rgba(255, 255, 255, 0.08);
+	--radius-xl: 28px;
+	--font-heading: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+	--font-body: 'Public Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-body);
+	background: var(--blue-900);
+	color: var(--text-primary);
+	min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+::selection {
+	background: var(--pink-500);
+	color: white;
+}
