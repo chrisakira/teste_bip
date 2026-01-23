@@ -1,0 +1,9 @@
+# Database credentials for local development
+POSTGRES_DB=bipapp
+POSTGRES_USER=bipuser
+POSTGRES_PASSWORD=bippass
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=bipapp
+DB_USER=bipuser
+DB_PASSWORD=bippass
