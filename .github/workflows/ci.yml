@@ -84,7 +84,7 @@ jobs:
 
       - name: Check frontend coverage threshold (80%)
         working-directory: frontend
-        run: node scripts/check-coverage.js 80 frontend/coverage/bip-app/lcov.info
+        run: node scripts/check-coverage.js 80 coverage/bip-app/lcov.info
   build_frontend_image:
     name: Build Frontend Docker Image
     runs-on: ubuntu-latest
