@@ -1,4 +1,19 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        BASE_HREF: /teste_bip/
+    image: bipapp-frontend:latest
+    ports:
+      - "4000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - test_bip
+
   backend:
     build:
       context: ./backend-module
