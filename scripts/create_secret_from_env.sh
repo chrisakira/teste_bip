@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Usage: ./scripts/create_secret_from_env.sh secret_name [env_file]
-# Default secret name ends with .properties so Spring can load it directly
-SECRET_NAME=${1:-teste_bip_env.properties}
+# Default secret name ends with  so Spring can load it directly
+SECRET_NAME=${1:-teste_bip_env}
 ENV_FILE=${2:-.env}
 if [ ! -f "$ENV_FILE" ]; then
   echo "Env file '$ENV_FILE' not found"
