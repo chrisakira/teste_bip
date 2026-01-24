@@ -6,11 +6,13 @@ Concise documentation for the Spring Boot backend implemented under the `backend
 
 - Java + Spring Boot REST API that manages `Beneficio` resources and supports a transfer operation between two benefits.
 - Designed to be simple, readable and easy to run locally for development or assessment purposes.
+- Docker support with secrets integration for secure credential management.
 
 ## Requirements
 
 - Java 17 (target). The project runs on newer JVMs (used successfully on Java 25); when using Java 25 some test tooling (Mockito/ByteBuddy) requires an extra flag (see Notes).
 - Maven 3.6+
+- PostgreSQL 16 (for Docker deployment)
 
 ## Build
 
@@ -29,6 +31,51 @@ cd backend-module
 # or
 mvn spring-boot:run -Dnet.bytebuddy.experimental=true
 ```
+
+## Docker Deployment
+
+### Building the Docker Image
+
+```bash
+docker build -t bipapp-backend:latest .
+```
+
+### Docker Compose
+
+The backend integrates with the main `docker-compose.yml` in the project root.
+
+### Docker Swarm with Secrets
+
+When deployed with Docker Swarm, the backend uses Docker secrets for secure configuration:
+
+1. **Secret mounting**: The secret `teste_bip_secrets` is mounted at `/run/secrets/teste_bip_secrets`
+2. **Entrypoint script**: `docker-entrypoint.sh` loads environment variables from the secrets file
+3. **Spring profiles**: Uses `docker` profile for PostgreSQL configuration
+
+#### Environment Variables (from secrets)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_HOST` | PostgreSQL host | `postgres` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `bipapp` |
+| `DB_USER` | Database username | `bipuser` |
+| `DB_PASSWORD` | Database password | `bippass` |
+| `SPRING_PROFILES_ACTIVE` | Spring profile | `docker` |
+| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins (comma-separated) | (all origins) |
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Multi-stage build (Maven → JRE) |
+| `docker-entrypoint.sh` | Loads secrets as environment variables |
+| `src/main/resources/application-docker.properties` | Docker/PostgreSQL configuration |
+
+### Application Profiles
+
+- **default**: H2 in-memory database (development/testing)
+- **docker**: PostgreSQL database (Docker deployment)
 
 ## Helper scripts
 
@@ -78,7 +125,7 @@ Base path: `/api/v1/beneficios`
 }
 ```
 
-HTTP responses are conventional: `200` success, `201` created, `400` bad request, `404` not found, `500` server error.
+HTTP responses are conventional: `200` success, `201` created, `204` no content, `400` bad request, `404` not found, `500` server error.
 
 ## Data Model (entity: `Beneficio`)
 
@@ -89,7 +136,17 @@ HTTP responses are conventional: `200` success, `201` created, `400` bad request
 - `ativo` (boolean) — active flag
 - `version` (Long) — JPA optimistic locking
 
+**Important**: The `version` field is required for optimistic locking. When seeding data, ensure `version` is set (e.g., `version = 0`), otherwise delete operations may fail silently.
+
 The transfer operation uses pessimistic locking in the repository to avoid concurrent consistency issues and validates sufficient balance before committing.
+
+## CORS Configuration
+
+The backend allows CORS from all origins by default. For production, you can restrict origins via the `CORS_ALLOWED_ORIGINS` environment variable (or Docker secret):
+
+```env
+CORS_ALLOWED_ORIGINS=https://your-domain.com,https://another-domain.com
+```
 
 ## Package Structure
 
@@ -99,7 +156,7 @@ Top-level Java package: `dev.ngrok.akira.bipapp`
 - `service` — business logic and transactional operations
 - `repository` — Spring Data JPA repositories (includes PESSIMISTIC_WRITE usage)
 - `model` — JPA entities
-- `config` — OpenAPI / swagger configuration
+- `config` — OpenAPI / swagger and CORS configuration
 
 Source paths:
 
@@ -118,21 +175,36 @@ http://localhost:8080/swagger-ui.html
 
 ## Configuration / Database
 
-- Uses H2 in-memory database for development and tests. Schema and seed data are available in `src/main/resources`.
-- JPA properties and H2 configuration are in `application.properties`.
+### Development (H2)
+- Uses H2 in-memory database for development and tests
+- Schema and seed data are available in `src/main/resources`
+- JPA properties and H2 configuration are in `application.properties`
+
+### Docker (PostgreSQL)
+- Uses PostgreSQL 16 with Docker
+- Configuration in `application-docker.properties`
+- Database credentials loaded from Docker secrets or environment variables
 
 ## Notes
 
 - If you're running on Java 25, tests using Mockito/ByteBuddy required the JVM property `-Dnet.bytebuddy.experimental=true` during `mvn test` (the helper scripts pass that flag automatically).
 - The `run-tests.sh` script now prints a compact, pretty summary when `-q` is used and displays the overall JaCoCo coverage percent.
+- **SQL initialization** is disabled in Docker mode (`spring.sql.init.mode=never`) to prevent seed data from overwriting user changes.
 
-## Next steps / Tips
+## Troubleshooting
 
-- To inspect failing tests in detail use the Surefire reports: `target/surefire-reports` or run Maven without `-q`.
-- To run the app and explore the API quickly, start the backend and open Swagger UI.
+### Delete operations not working
+Ensure the `version` column has a value (not NULL). Update existing rows:
+```sql
+UPDATE beneficio SET version = 0 WHERE version IS NULL;
+```
+
+### Database connection failed
+1. Check PostgreSQL is running: `docker service ps teste_bip_postgres`
+2. Verify secrets are loaded: `docker exec <container> cat /run/secrets/teste_bip_secrets`
+3. Check network connectivity between services
 
 ---
-Generated README for developer convenience. If you want this shortened, converted to HTML, or extended with example responses and Postman collection, tell me which format you prefer.
 
 ## Curl Examples
 
@@ -182,7 +254,7 @@ curl -sS -X POST http://localhost:8080/api/v1/beneficios/transferir \
 
 ## Postman Collection
 
-I added a Postman collection JSON you can import into Postman or similar tools. It includes requests for list, get, create, update, delete and transfer. Import the file located at:
+A Postman collection JSON is available for import into Postman or similar tools. It includes requests for list, get, create, update, delete and transfer. Import the file located at:
 
 ```
 backend-module/postman/bip_app.postman_collection.json

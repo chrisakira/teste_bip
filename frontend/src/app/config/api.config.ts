@@ -1,20 +1,21 @@
 /**
  * Determines API base URL based on environment.
- * In production (Docker), uses relative path proxied by nginx or same-origin backend.
- * In development, uses localhost:8080.
+ * In production (Docker), uses relative path proxied by nginx.
+ * In development with ng serve, uses localhost:8080.
  */
 function getApiBaseUrl(): string {
   // Check if running in browser
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // If not localhost, use the production backend URL
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      // Use same origin with /api path (backend should be accessible)
-      return `${window.location.protocol}//${window.location.host}/api/v1`;
+    // Check if running via ng serve (default port 4200)
+    if (window.location.port === '4200') {
+      // Local development without Docker - direct backend access
+      return 'http://localhost:8080/api/v1';
     }
+    // All other cases (Docker/production) - use relative path for nginx proxy
+    return '/api/v1';
   }
-  // Default for local development
-  return 'http://localhost:8080/api/v1';
+  // SSR/server-side fallback
+  return '/api/v1';
 }
 
 /**
