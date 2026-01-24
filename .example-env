@@ -7,3 +7,5 @@ DB_PORT=5432
 DB_NAME=bipapp
 DB_USER=bipuser
 DB_PASSWORD=bippass
+SPRING_PROFILES_ACTIVE=docker
+BACKEND_API=http://backend:8080

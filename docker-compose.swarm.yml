@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: bipapp-frontend:latest
+    ports:
+      - "8090:80"
+    environment:
+      BACKEND_API: http://backend:8080
+    secrets:
+      - teste_bip_secrets
+    depends_on:
+      - backend
+    networks:
+      - test_bip
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  backend:
+    image: bipapp-backend:latest
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    secrets:
+      - teste_bip_secrets
+    depends_on:
+      - postgres
+    networks:
+      - test_bip
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    # For PostgreSQL, we use individual secrets for better compatibility
+    # These secrets must be created separately or you can use the combined approach below
+    environment:
+      POSTGRES_DB: bipapp
+      POSTGRES_USER: bipuser
+    secrets:
+      - source: teste_bip_secrets
+        target: db_password
+        mode: 0400
+    # PostgreSQL can read password from file with POSTGRES_PASSWORD_FILE
+    # But since our secret is a .env file, we use a custom entrypoint
+    entrypoint: >
+      sh -c '
+        if [ -f /run/secrets/db_password ]; then
+          export POSTGRES_PASSWORD=$$(grep "^POSTGRES_PASSWORD=" /run/secrets/db_password | cut -d= -f2)
+        fi
+        exec docker-entrypoint.sh postgres
+      '
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bipuser -d bipapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test_bip
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+volumes:
+  pgdata:
+
+networks:
+  test_bip:
+    driver: overlay
+
+secrets:
+  teste_bip_secrets:
+    external: true

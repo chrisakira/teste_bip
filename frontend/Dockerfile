@@ -23,11 +23,16 @@ COPY nginx.conf /etc/nginx/templates/nginx.conf.template
 # Copy built Angular app to nginx html folder
 COPY --from=builder /app/dist/bip-app/browser /usr/share/nginx/html/teste_bip
 
+# Copy entrypoint script for Docker Swarm secrets support
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Set default backend API URL
 ENV BACKEND_API=http://backend:8080
 
 # Expose port 80
 EXPOSE 80
 
-# Use envsubst to substitute environment variables and start nginx
-CMD ["sh", "-c", "envsubst '${BACKEND_API}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+# Use entrypoint to load secrets and start nginx
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
