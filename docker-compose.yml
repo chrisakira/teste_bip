@@ -1,65 +1,102 @@
+version: "3.8"
+
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        BASE_HREF: /teste_bip/
     image: bipapp-frontend:latest
-    ports:
-      - "80:80"
     environment:
       BACKEND_API: http://backend:8080
+    secrets:
+      - teste_bip_secrets
     depends_on:
       - backend
-    restart: unless-stopped
     networks:
       - test_bip
+      - web
+    deploy:
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.docker.network=web'
+        # Router for frontend app
+        - "traefik.http.routers.teste_bip.rule=PathPrefix(`/teste_bip`)"
+        - "traefik.http.routers.teste_bip.entryPoints=https"
+        - "traefik.http.routers.teste_bip.tls.certresolver=myresolver"
+        - "traefik.http.routers.teste_bip.service=teste_bip"
+        # Router for API proxy (through frontend nginx)
+        - "traefik.http.routers.teste_bip_api.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.teste_bip_api.entryPoints=https"
+        - "traefik.http.routers.teste_bip_api.tls.certresolver=myresolver"
+        - "traefik.http.routers.teste_bip_api.service=teste_bip"
+        # Service configuration
+        - "traefik.http.services.teste_bip.loadbalancer.server.port=80"
+        - "traefik.http.services.teste_bip.loadBalancer.sticky.cookie=true"
+        - "traefik.http.services.teste_bip.loadBalancer.sticky.cookie.name=teste_bip"
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   backend:
-    build:
-      context: ./backend-module
-      dockerfile: Dockerfile
     image: bipapp-backend:latest
-    env_file:
-      - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+    secrets:
+      - teste_bip_secrets
     depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
+      - postgres
+    ports:
+      - "8090:8080" 
     networks:
       - test_bip
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   postgres:
     image: postgres:16
-    restart: unless-stopped
     ports:
       - "5432:5432"
-    env_file:
-      - .env
+    # For PostgreSQL, we use individual secrets for better compatibility
+    # These secrets must be created separately or you can use the combined approach below
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: bipapp
+      POSTGRES_USER: bipuser
+    secrets:
+      - source: teste_bip_secrets
+        target: db_password
+        mode: 0400
+    # PostgreSQL can read password from file with POSTGRES_PASSWORD_FILE
+    # But since our secret is a .env file, we use a custom entrypoint
+    entrypoint: >
+      sh -c '
+        if [ -f /run/secrets/db_password ]; then
+          export POSTGRES_PASSWORD=$$(grep "^POSTGRES_PASSWORD=" /run/secrets/db_password | cut -d= -f2)
+        fi
+        exec docker-entrypoint.sh postgres
+      '
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U bipuser -d bipapp"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - test_bip
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 volumes:
   pgdata:
 
 networks:
   test_bip:
+    driver: overlay
+  web:
+    external: true
+
+secrets:
+  teste_bip_secrets:
+    external: true

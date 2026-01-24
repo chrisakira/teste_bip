@@ -63,6 +63,7 @@ public class BeneficioService {
      * Removes a benefit by id.
      * @param id Identifier of the benefit to be removed
      */
+    @Transactional
     public void deletar(Long id) {
         Beneficio existente = buscarPorId(id);
         repository.delete(existente);

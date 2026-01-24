@@ -3,8 +3,6 @@ version: "3.8"
 services:
   frontend:
     image: bipapp-frontend:latest
-    ports:
-      - "8090:80"
     environment:
       BACKEND_API: http://backend:8080
     secrets:
@@ -13,7 +11,26 @@ services:
       - backend
     networks:
       - test_bip
+      - web
     deploy:
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.docker.network=web'
+        # Router for frontend app
+        - "traefik.http.routers.teste_bip.rule=PathPrefix(`/teste_bip`)"
+        - "traefik.http.routers.teste_bip.entryPoints=https"
+        - "traefik.http.routers.teste_bip.tls.certresolver=myresolver"
+        - "traefik.http.routers.teste_bip.service=teste_bip"
+        # Router for API proxy (through frontend nginx)
+        - "traefik.http.routers.teste_bip_api.rule=PathPrefix(`/api`)"
+        - "traefik.http.routers.teste_bip_api.entryPoints=https"
+        - "traefik.http.routers.teste_bip_api.tls.certresolver=myresolver"
+        - "traefik.http.routers.teste_bip_api.service=teste_bip"
+        # Service configuration
+        - "traefik.http.services.teste_bip.loadbalancer.server.port=80"
+        - "traefik.http.services.teste_bip.loadBalancer.sticky.cookie=true"
+        - "traefik.http.services.teste_bip.loadBalancer.sticky.cookie.name=teste_bip"
+      mode: replicated
       replicas: 1
       restart_policy:
         condition: on-failure
@@ -26,6 +43,8 @@ services:
       - teste_bip_secrets
     depends_on:
       - postgres
+    ports:
+      - "8090:8080" 
     networks:
       - test_bip
     deploy:
@@ -75,6 +94,8 @@ volumes:
 networks:
   test_bip:
     driver: overlay
+  web:
+    external: true
 
 secrets:
   teste_bip_secrets:
