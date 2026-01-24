@@ -1,0 +1,36 @@
+# BIP App - Environment Variables Example
+# Copy this file to .env and adjust values as needed
+# For Docker Swarm, create a secret: docker secret create teste_bip_secrets .env
+
+# ===========================================
+# Database Configuration (PostgreSQL)
+# ===========================================
+POSTGRES_DB=bipapp
+POSTGRES_USER=bipuser
+POSTGRES_PASSWORD=your_secure_password_here
+
+# ===========================================
+# Backend Database Connection
+# ===========================================
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=bipapp
+DB_USER=bipuser
+DB_PASSWORD=your_secure_password_here
+
+# ===========================================
+# Application Settings
+# ===========================================
+SPRING_PROFILES_ACTIVE=docker
+
+# ===========================================
+# Frontend Configuration
+# ===========================================
+BACKEND_API=http://backend:8080
+
+# ===========================================
+# CORS Configuration (Optional)
+# Comma-separated list of allowed origins
+# Leave empty to allow all origins
+# ===========================================
+CORS_ALLOWED_ORIGINS=
